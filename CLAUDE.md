@@ -54,38 +54,73 @@ web/
 
 ## 진행 상황 (2026-05-07 기준)
 
-### 완료된 것
-- [x] Flutter Web 환경 설치 (`~/dev/flutter/`, PATH 등록)
-- [x] 프로젝트 생성 (`flutter create . --platforms web`)
-- [x] **홈 화면** — 러너스톡 로고, "오늘의 운동 시작" pill 버튼
-- [x] **코스 선택 화면** — 초보자/초급/중급 카드 리스트 (확장 가능 구조)
-- [x] **인터벌 타이머 화면**
-  - 워밍업 5분 → (달리기 1분 + 걷기 1.5분) × 7세트 → 쿨다운 3분
-  - ▶/⏸ 수동 시작/일시정지
-  - 상단 스크럽바: 탭/드래그로 구간 이동, 페이즈별 색상 세그먼트
-  - 페이즈 색상: 워밍업(파랑) / 달리기(오렌지) / 걷기(초록) / 쿨다운(보라)
-  - 운동 완료 시 축하 화면 → "홈으로" 루트로 복귀
-- [x] **운동 기록 저장** (localStorage, 로그인 없음)
-  - 완료 날짜·시간, 코스명, 총 운동 시간, 페이즈 목록
-- [x] **홈 통계 카드** — 성공 N일차 / 연속 N일 운동 / 이번 주 N/7회
-- [x] **디자인 시스템** (`lib/theme/`)
-  - Pretendard 폰트 (CDN, 디스크 0 사용)
-  - 단일 액센트 오렌지 (#FF6B35), pill CTA, 그림자 없는 카드
-  - `import '../theme/runners_theme.dart'` 한 줄로 전체 토큰 사용
+### 화면별 구현 상태
 
-### 다음 세션에서 할 것 (우선순위 순)
-1. **음성/진동 알림** — 페이즈 전환 시 "달려요!", "걸어요!" 음성 안내
-   - Flutter Web: `web_audio_api` 또는 `audioplayers` 패키지
-   - 모바일 대비: 진동(`HapticFeedback`) 추가 예정
-2. **초급·중급 코스 프로그램 구현** — `buildElementaryProgram()`, `buildIntermediateProgram()`
-   - `lib/data/courses.dart`의 TODO 항목
-3. **운동 기록 히스토리 화면** — 날짜별 운동 목록, 캘린더 뷰
-4. **Web 배포** — GitHub Pages 또는 Firebase Hosting
+#### ✅ 홈 화면 (`home_screen.dart`, 198줄)
+- 러너스톡 로고 + 오렌지 feature 그림자
+- "오늘의 운동 시작" pill 버튼 → 코스 선택으로 이동
+- 운동 기록 있을 때만 통계 카드 표시 (없으면 숨김)
+  - 성공 N일차 / 연속 N일 운동 중 / 이번 주 N/7회
+- 운동 완료 후 돌아오면 자동 통계 갱신
 
-### 알려진 미완료/TODO
-- `course_selection_screen.dart`: 초급·중급 코스 탭 시 초보자 프로그램으로 fallback 중 (TODO 표시)
-- 타이머 완료 후 페이즈 skip 시 `_secondsLeft`가 간헐적으로 0이 될 수 있음 (재현 미확인)
-- 통계 "성공 N일차"는 첫 운동일~오늘 달력 기준 (운동 안 한 날도 포함)
+#### ✅ 코스 선택 화면 (`course_selection_screen.dart`, 172줄)
+- 초보자 / 초급 / 중급 카드 리스트
+- 난이도 pill 배지, 주차 정보, 설명 포함
+- **⚠️ 미완성**: 초급·중급 탭 시 초보자 프로그램으로 fallback
+  - `course_selection_screen.dart:14` — `_ => buildBeginnerProgram()`
+
+#### ✅ 인터벌 타이머 화면 (`timer_screen.dart`, 463줄)
+- 초보자 코스: 워밍업 5분 → (달리기 1분 + 걷기 1.5분) × 7세트 → 쿨다운 3분
+- ▶/⏸ 수동 시작·일시정지 (자동 시작 없음 — 의도적)
+- 상단 스크럽바: 탭·드래그로 구간 이동, 페이즈별 색상 (커스텀 `CustomPainter`)
+- 세트 진행 표시 (1/7, 2/7...)
+- 전체 남은 시간 AppBar 우측 표시
+- 완료 → 축하 화면 → "홈으로" 누르면 스택 전체 pop (코스 선택 건너뜀)
+- **⚠️ 미완성**: 페이즈 전환 시 음성/진동 알림 없음
+
+#### ❌ 미구현 화면
+- 운동 기록 히스토리 화면 (날짜별 목록)
+- 코스 상세/소개 화면
+
+### 동작하는 기능
+| 기능 | 상태 | 비고 |
+|---|---|---|
+| 인터벌 타이머 (초보자) | ✅ 완전 동작 | |
+| 구간 스크럽 (드래그/탭) | ✅ 완전 동작 | |
+| 운동 기록 localStorage 저장 | ✅ 완전 동작 | 브라우저 새로고침 후에도 유지 |
+| 홈 통계 카드 | ✅ 완전 동작 | |
+| 디자인 시스템 토큰 | ✅ 완전 동작 | Pretendard CDN |
+| 초급·중급 코스 | ⚠️ fallback | 초보자 프로그램으로 실행됨 |
+| 페이즈 전환 알림 | ❌ 미구현 | 소리/진동 없음 |
+| 운동 기록 히스토리 | ❌ 미구현 | 화면 없음 |
+| Web 배포 | ❌ 미구현 | 로컬만 동작 |
+
+### 외부 패키지
+현재 `cupertino_icons`만 사용 중. 추가 패키지 없음.
+Pretendard는 `web/index.html` CDN으로 로드 (디스크 사용 0).
+
+### 다음 세션 추천 작업 (우선순위 순)
+
+**1순위 — 초급·중급 코스 구현 (버그 수정)**
+- `lib/models/interval_program.dart`에 `buildElementaryProgram()`, `buildIntermediateProgram()` 추가
+- `course_selection_screen.dart:14` switch 케이스 채우기
+- 빠르게 할 수 있고, 현재 버그성 fallback을 막음
+
+**2순위 — 페이즈 전환 음성 알림**
+- 브라우저 Web Audio API 직접 사용 (패키지 불필요)
+- `dart:js_interop`으로 `window.speechSynthesis.speak()` 호출
+- "달려요!" / "걸어요!" / "워밍업 시작!" / "잘했어요, 쿨다운!"
+- UX 임팩트가 가장 큼 (화면 안 봐도 운동 가능)
+
+**3순위 — 운동 기록 히스토리 화면**
+- `WorkoutRecord` 리스트를 날짜 역순으로 표시
+- 코스명, 운동 시간, 날짜 카드
+- 동기 부여 요소 + "나 이만큼 했다" 확인
+
+**4순위 — Web 배포 (GitHub Pages)**
+- `flutter build web --no-tree-shake-icons`
+- GitHub 저장소 생성 → `build/web` 폴더 배포
+- 실제 사람에게 링크 공유 → MVP 검증 시작
 
 ## 주요 아키텍처 결정
 - **Firebase 업그레이드 포인트**: `local_workout_repository.dart` 마지막 줄 한 줄만 교체
